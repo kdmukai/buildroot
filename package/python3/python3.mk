@@ -34,8 +34,7 @@ HOST_PYTHON3_CONF_OPTS += \
 	--enable-unicodedata \
 	--disable-test-modules \
 	--disable-idle3 \
-	--disable-ossaudiodev \
-	--enable-optimizations
+	--disable-ossaudiodev
 
 # Make sure that LD_LIBRARY_PATH overrides -rpath.
 # This is needed because libpython may be installed at the same time that
@@ -187,8 +186,7 @@ PYTHON3_CONF_OPTS += \
 	--disable-tk \
 	--disable-nis \
 	--disable-idle3 \
-	--disable-pyc-build \
-	--enable-optimizations
+	--disable-pyc-build
 
 #
 # Remove useless files. In the config/ directory, only the Makefile
@@ -257,11 +255,12 @@ endif
 
 define PYTHON3_CREATE_PYC_FILES
 	$(PYTHON3_FIX_TIME)
-	PYTHONPATH="$(PYTHON3_PATH)" \
+	SOURCE_DATE_EPOCH=1 PYTHONHASHSEED=0 PYTHONPATH="$(PYTHON3_PATH)" \
 	$(HOST_DIR)/bin/python$(PYTHON3_VERSION_MAJOR) \
 		$(PYTHON3_DIR)/Lib/compileall.py \
 		$(if $(VERBOSE),,-q) \
 		$(if $(BR2_PACKAGE_PYTHON3_PYC_ONLY),-b) \
+		-f --invalidation-mode=checked-hash \
 		-s $(TARGET_DIR) \
 		-p / \
 		$(TARGET_DIR)/usr/lib/python$(PYTHON3_VERSION_MAJOR)
@@ -278,7 +277,9 @@ define PYTHON3_REMOVE_PY_FILES
 		-print0 | \
 		xargs -0 --no-run-if-empty rm -f
 endef
-PYTHON3_TARGET_FINALIZE_HOOKS += PYTHON3_REMOVE_PY_FILES
+# Comment out PYTHON3_REMOVE_PY_FILES Hook
+# Instead handle in post-build.sh script
+# PYTHON3_TARGET_FINALIZE_HOOKS += PYTHON3_REMOVE_PY_FILES
 endif
 
 # Normally, *.pyc files should not have been compiled, but just in
